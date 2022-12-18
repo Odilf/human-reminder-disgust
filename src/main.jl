@@ -19,10 +19,11 @@ function create_video(
 		frame = read(video_stream)
 		
 		# First fade to triangles
-		resolution = i > 180 ? 60 : round(Int, rescale(i, 1, 180, 500, 60))
+		# resolution = i > 180 ? 60 : round(Int, rescale(i, 1, 180, 500, 60))
+		resolution = 60
 
 		# Trianglify
-		frame = trianglify(frame; resolution)
+		frame = trianglify(frame; resolution, sides = 5)
 
 		# Push the frames
 		push!(frames, frame)
@@ -36,5 +37,3 @@ function create_video(
 	@info "Render is finished, saving to file..."
 	save(output, frames; framerate=12)
 end
-
-create_video("samples/sample for triangles.mp4")
