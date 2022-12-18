@@ -1,9 +1,9 @@
 using Luxor, Images, Colors
 
-luminance(rgb::RGB) =  0.3rgb.r + 0.59rgb.g + 0.11rgb.b
+luminance(rgb::RGB) = 0.3rgb.r + 0.59rgb.g + 0.11rgb.b
 
 """
-	decimate(target_resolution::Integer, input_resolution::Tuple{<:Integer, <:Integer})
+	distribute(target_resolution::Integer, input_resolution::Tuple{<:Integer, <:Integer})
 
 Returns a tuple of x and y coordinates in the aspect ratio of `input_resolution` such that `x*y = resolution^2`
 """
@@ -14,15 +14,13 @@ function distribute(target_resolution::Integer, input_resolution::Tuple{<:Intege
 	return round.(Int, (x, y))
 end
 
-ugh = load("samples/bass_down_ugh.jpg")
-
 function trianglify(
 	image; 
 	resolution=60, 
-	output_resolution=(2560, 1440),
+	output_resolution=(1920, 1080),
 	pixel_scalar=3,
+	sides=3
 )
-
 	# Scaffolding
 	Drawing(output_resolution..., :png)
 	image = transpose(image)
@@ -38,22 +36,18 @@ function trianglify(
 	
 	for t_coords ∈ CartesianIndices(triangle_resolution)	
 
+		# Get all different useful coordinate spaces
 		percentage_coords = t_coords.I ./ triangle_resolution
 		input_coords = round.(Int, percentage_coords .* input_resolution)
 		output_coords = percentage_coords .* output_resolution .- pixel_size/2
 
-		# println(output_coords)
-
+		# Set color
 		pixel = image[input_coords...]
 		setcolor(pixel)
+		rotation = luminance(pixel) * 2π + rand() * 0.1
 
-		ngon(
-			output_coords..., # Position
-			pixel_size, # Size
-			3, # Sides
-			luminance(pixel) * 2π + rand() * 0.1; 
-			action = :fill
-		)
+		# Create triangle
+		ngon(output_coords..., pixel_size, sides, rotation; action = :fill)
 	end
 
 	mat = image_as_matrix()
@@ -62,5 +56,5 @@ function trianglify(
 	map(p -> RGB(p), Matrix(mat))
 end
 
-save("out/output.png", trianglify(ugh))
-ugh = load("samples/bass_down_meh.jpg")
+save("out/heptagon.png", trianglify(ugh))
+ugh = load("samples/bass_down_ugh.jpg");
